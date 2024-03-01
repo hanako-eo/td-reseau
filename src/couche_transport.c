@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "couche_transport.h"
 #include "services_reseau.h"
 #include "application.h"
@@ -9,8 +10,17 @@
 
 // RAJOUTER VOS FONCTIONS DANS CE FICHIER...
 
+int calcul_checksum(paquet_t* p) {
+    int c = p->type ^ p->num_seq ^ p->lg_info;
+    for (size_t i = 0; i < p->lg_info; i++)
+        c ^= p->info[i];
 
+    return c;
+}
 
+bool check_integrity(paquet_t* p) {
+    return calcul_checksum(p) == p->somme_ctrl;
+}
 
 
 /* ===================== Fenêtre d'anticipation ============================= */

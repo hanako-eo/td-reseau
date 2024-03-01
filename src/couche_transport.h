@@ -2,6 +2,7 @@
 #define __COUCHE_TRANSPORT_H__
 
 #include <stdint.h> /* uint8_t */
+#include <stdbool.h> /* bool */
 #define MAX_INFO 96
 
 /*************************
@@ -36,6 +37,9 @@ typedef struct paquet_s {
 /* ************************************** */
 /* Fonctions utilitaires couche transport */
 /* ************************************** */
+
+int calcul_checksum(paquet_t* p);
+bool check_integrity(paquet_t* p);
 
 /*--------------------------------------*
 * Fonction d'inclusion dans la fenetre *
