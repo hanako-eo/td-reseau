@@ -34,6 +34,15 @@ typedef struct paquet_s {
 /* Capacite de numerotation */
 #define SEQ_NUM_SIZE 16
 
+typedef enum {
+    ETAT_NONENVOYE,
+    ETAT_ENVOYE,
+    ETAT_CONFIRME,
+} etat_paquet_t;
+
+#define ETAT_NONRECU ETAT_NONENVOYE
+#define ETAT_RECU ETAT_ENVOYE
+
 /* ************************************** */
 /* Fonctions utilitaires couche transport */
 /* ************************************** */
