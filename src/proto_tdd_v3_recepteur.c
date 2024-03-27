@@ -35,16 +35,18 @@ int main(int argc, char* argv[])
         // attendre(); /* optionnel ici car de_reseau() fct bloquante */
         de_reseau(&paquet);
 
-        if (check_integrity(&paquet) && dans_fenetre(next_cursor, paquet.num_seq, 1)) {
-            next_cursor = (paquet.num_seq + 1) % SEQ_NUM_SIZE;
+        if (check_integrity(&paquet)) {
             /* extraction des donnees du paquet recu */
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
             }
             pack.type = ACK;
 
-            /* remise des données à la couche application */
-            fin = vers_application(message, paquet.lg_info);
+            if (dans_fenetre(next_cursor, paquet.num_seq, 1)) {
+                next_cursor = (paquet.num_seq + 1) % SEQ_NUM_SIZE;
+                /* remise des données à la couche application */
+                fin = vers_application(message, paquet.lg_info);
+            }
         } else {
             pack.type = NACK;
         }
