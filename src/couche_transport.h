@@ -32,7 +32,7 @@ typedef struct paquet_s {
 
 
 /* Capacite de numerotation */
-#define SEQ_NUM_SIZE 8
+#define SEQ_NUM_SIZE 16
 
 /* ************************************** */
 /* Fonctions utilitaires couche transport */
@@ -45,5 +45,7 @@ bool check_integrity(paquet_t* p);
 * Fonction d'inclusion dans la fenetre *
 *--------------------------------------*/
 int dans_fenetre(unsigned int inf, unsigned int pointeur, int taille);
+
+unsigned int increment(unsigned int n);
 
 #endif

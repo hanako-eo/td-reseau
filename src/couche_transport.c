@@ -40,3 +40,7 @@ int dans_fenetre(unsigned int inf, unsigned int pointeur, int taille) {
         /* pointeur <= sup < inf */
         ( sup < inf && pointeur <= sup);
 }
+
+unsigned int increment(unsigned int n) {
+    return (n + 1) % SEQ_NUM_SIZE;
+}
