@@ -7,13 +7,12 @@
 * E. Lavinal - Univ. de Toulouse III - Paul Sabatier         *
 **************************************************************/
 
-#include <string.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "application.h"
 #include "couche_transport.h"
 #include "services_reseau.h"
+#include "config.h"
 
 /* =============================== */
 /* Programme principal - émetteur  */
@@ -70,7 +69,7 @@ int main(int argc, char* argv[])
             curseur_denvoie != curseur_decriture
         ) {
             if (etats_des_paquets[curseur_denvoie] == ETAT_NONENVOYE) {
-                depart_temporisateur_num(curseur_denvoie + 1, 2000);
+                depart_temporisateur_num(curseur_denvoie + 1, recuperation_temps_attente());
 
                 etats_des_paquets[curseur_denvoie] = ETAT_ENVOYE;
                 vers_reseau(&paquets[curseur_denvoie]);

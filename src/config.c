@@ -95,3 +95,15 @@ int conf_perte_connexion(char * type) {
     else
         return 0;
 }
+
+int recuperation_temps_attente() {
+    static int attente_cache = -1;
+    char valeur[8];
+
+    if (attente_cache != -1)
+        return attente_cache;
+
+    attente_cache = lecture_fichier_conf(ATTENTE, valeur) ? atoi(valeur) : TEMPS_DATTENTE_DEFAUT;
+
+    return attente_cache;
+}

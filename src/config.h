@@ -20,6 +20,12 @@
 #define PERTE_DECONNEXION "PERTE_CON_CLOSE"
 #define PERTE_DECONNEXION_ACK "PERTE_CON_CLOSE_ACK"
 
+#define ATTENTE "ATTENTE"
+
+/* Temps d'attente par defaut des timers */
+#define TEMPS_DATTENTE_DEFAUT 1000 // 1s
+int recuperation_temps_attente();
+
 void conf_fichier_emission(char * fichier_emission);
 
 void conf_fichier_reception(char * fichier_reception);

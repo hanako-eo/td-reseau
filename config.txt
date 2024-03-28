@@ -1,6 +1,9 @@
 # Parametres de configuration
 #------------------------------
 
+# Temps en ms, si inexistant par defaut a 1000 (1s)
+ATTENTE 1000
+
 # Fichiers pour application
 #---------------------------
 FICHIER_IN fichiers/in.txt

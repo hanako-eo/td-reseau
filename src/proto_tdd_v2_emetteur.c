@@ -11,6 +11,7 @@
 #include "application.h"
 #include "couche_transport.h"
 #include "services_reseau.h"
+#include "config.h"
 
 /* =============================== */
 /* Programme principal - émetteur  */
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
         do {
             // remise à la couche reseau
             vers_reseau(&paquet);
-            depart_temporisateur(2000);
+            depart_temporisateur(recuperation_temps_attente());
 
             int event = attendre();
 

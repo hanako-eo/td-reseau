@@ -12,6 +12,7 @@
 #include "application.h"
 #include "couche_transport.h"
 #include "services_reseau.h"
+#include "config.h"
 
 /* =============================== */
 /* Programme principal - émetteur  */
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
         // envoie des paquets
         while (dans_fenetre(borne_inf, curseur_denvoie, taille_fenetre) && curseur_denvoie != curseur_decriture) {
             if (borne_inf == curseur_denvoie)
-                depart_temporisateur(2000);
+                depart_temporisateur(recuperation_temps_attente());
             
             vers_reseau(&paquets[curseur_denvoie]);
             curseur_denvoie = increment(curseur_denvoie);
