@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
     init_reseau(EMISSION);
 
-    printf("[TRP] Taille de la fenetre d'envoie : %d.\n", taille_fenetre);
+    printf("[TRP] Taille de la fenetre d'envoie : %ld.\n", taille_fenetre);
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 

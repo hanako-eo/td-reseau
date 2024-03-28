@@ -30,12 +30,12 @@ int main(int argc, char* argv[])
     uint32_t curseur_decriture = 0;
     uint32_t curseur_denvoie = 0;
     uint32_t borne_inf = 0;
-    uint32_t taille_fenetre =  argc > 1 ? atoi(argv[1]) : SEQ_NUM_SIZE / 2;
+    size_t taille_fenetre =  argc > 1 ? atoi(argv[1]) : SEQ_NUM_SIZE / 2;
     int8_t nombre_paquets_non_envoye = 0;
 
     init_reseau(EMISSION);
 
-    printf("[TRP] Taille de la fenetre d'envoie : %d.\n", taille_fenetre);
+    printf("[TRP] Taille de la fenetre d'envoie : %ld.\n", taille_fenetre);
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 

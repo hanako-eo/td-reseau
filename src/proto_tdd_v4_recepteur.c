@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
     // fenetre du "Selective Repeat"
     etat_paquet_t etats_des_paquets[SEQ_NUM_SIZE] = {ETAT_NONRECU};
     uint32_t borne_inf = 0;
-    uint32_t taille_fenetre =  argc > 1 ? atoi(argv[1]) : SEQ_NUM_SIZE / 2;
+    size_t taille_fenetre =  argc > 1 ? atoi(argv[1]) : SEQ_NUM_SIZE / 2;
 
     init_reseau(RECEPTION);
 
-    printf("[TRP] Taille de la fenetre d'envoie : %d.\n", taille_fenetre);
+    printf("[TRP] Taille de la fenetre d'envoie : %ld.\n", taille_fenetre);
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 
