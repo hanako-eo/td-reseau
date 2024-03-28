@@ -34,12 +34,12 @@ typedef struct paquet_s {
 /* Capacite de numerotation */
 #define SEQ_NUM_SIZE 16
 
-typedef enum {
-    ETAT_NONENVOYE,
-    ETAT_ENVOYE,
-    ETAT_CONFIRME,
-} etat_paquet_t;
+/* Gestion des etats des paquets pour le Selective Repeat */
+typedef uint8_t etat_paquet_t;
 
+#define ETAT_NONENVOYE 0
+#define ETAT_ENVOYE 1
+#define ETAT_CONFIRME 2
 #define ETAT_NONRECU ETAT_NONENVOYE
 #define ETAT_RECU ETAT_ENVOYE
 
@@ -47,8 +47,8 @@ typedef enum {
 /* Fonctions utilitaires couche transport */
 /* ************************************** */
 
-int calcul_checksum(paquet_t* p);
-bool check_integrity(paquet_t* p);
+int calcul_somme_ctrl(paquet_t* p);
+bool controle_integrite(paquet_t* p);
 
 /*--------------------------------------*
 * Fonction d'inclusion dans la fenetre *

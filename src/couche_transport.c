@@ -10,7 +10,7 @@
 
 // RAJOUTER VOS FONCTIONS DANS CE FICHIER...
 
-int calcul_checksum(paquet_t* p) {
+int calcul_somme_ctrl(paquet_t* p) {
     int c = p->type ^ p->num_seq ^ p->lg_info;
     for (size_t i = 0; i < p->lg_info; i++)
         c ^= p->info[i];
@@ -18,8 +18,8 @@ int calcul_checksum(paquet_t* p) {
     return c;
 }
 
-bool check_integrity(paquet_t* p) {
-    return calcul_checksum(p) == p->somme_ctrl;
+bool controle_integrite(paquet_t* p) {
+    return calcul_somme_ctrl(p) == p->somme_ctrl;
 }
 
 

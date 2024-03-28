@@ -17,43 +17,40 @@
 /* =============================== */
 int main(int argc, char* argv[])
 {
-    unsigned char message[MAX_INFO]; /* message pour l'application */
-    paquet_t paquet; /* paquet utilisé par le protocole */
-    paquet_t pack;
+    unsigned char message[MAX_INFO]; // message pour l'application
+    paquet_t paquet; // paquet d'envoie du message
+    paquet_t p_ack; // paquet de recuperation du ACK
 
     // fenetre du "Go-Back N"
-    uint8_t next_cursor = 0;
+    uint8_t prochain_id = 0;
 
     init_reseau(RECEPTION);
 
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 
-    int fin = 0; /* condition d'arrêt */
-    /* tant que le récepteur reçoit des données */
-    while ( !fin ) {
-        // attendre(); /* optionnel ici car de_reseau() fct bloquante */
+    int fin = 0; // condition d'arrêt
+    // tant que le récepteur reçoit des données
+    while (!fin) {
         de_reseau(&paquet);
 
-        if (check_integrity(&paquet)) {
-            /* extraction des donnees du paquet recu */
+        if (controle_integrite(&paquet)) {
+            // extraction des donnees du paquet recu
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
             }
-            pack.type = ACK;
+            p_ack.type = ACK;
 
-            if (dans_fenetre(next_cursor, paquet.num_seq, 1)) {
-                next_cursor = increment(paquet.num_seq);
-                /* remise des données à la couche application */
+            if (prochain_id == paquet.num_seq) {
+                prochain_id = increment(paquet.num_seq);
+                // remise des données à la couche application
                 fin = vers_application(message, paquet.lg_info);
             }
-        } else {
-            pack.type = NACK;
-        }
+        } else p_ack.type = NACK;
         // numero du prochain index du paquet a envoyer
-        pack.num_seq = next_cursor;
+        p_ack.num_seq = prochain_id;
 
-        vers_reseau(&pack);
+        vers_reseau(&p_ack);
     }
 
     printf("[TRP] Fin execution protocole transport.\n");

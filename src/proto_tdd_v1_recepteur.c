@@ -1,6 +1,6 @@
 /*************************************************************
-* proto_tdd_v0 -  récepteur                                  *
-* TRANSFERT DE DONNEES  v0                                   *
+* proto_tdd_v1 -  récepteur                                  *
+* TRANSFERT DE DONNEES  v1                                   *
 *                                                            *
 * Protocole sans contrôle de flux, sans reprise sur erreurs  *
 *                                                            *
@@ -17,34 +17,31 @@
 /* =============================== */
 int main(int argc, char* argv[])
 {
-    unsigned char message[MAX_INFO]; /* message pour l'application */
-    paquet_t paquet, pack; /* paquet utilisé par le protocole */
-    int fin = 0; /* condition d'arrêt */
+    unsigned char message[MAX_INFO]; // message pour l'application
+    paquet_t paquet; // paquet d'envoie du message
+    paquet_t p_ack; // paquet de recuperation du ACK
+    int fin = 0; // condition d'arrêt
 
     init_reseau(RECEPTION);
 
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 
-    /* tant que le récepteur reçoit des données */
-    while ( !fin ) {
-
-        // attendre(); /* optionnel ici car de_reseau() fct bloquante */
+    // tant que le récepteur reçoit des données
+    while (!fin) {
         de_reseau(&paquet);
 
-        if (check_integrity(&paquet)) {
-            /* extraction des donnees du paquet recu */
+        if (controle_integrite(&paquet)) {
+            // extraction des donnees du paquet recu
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
             }
-            pack.type = ACK;
+            p_ack.type = ACK;
 
-            /* remise des données à la couche application */
+            // remise des données à la couche application
             fin = vers_application(message, paquet.lg_info);
-        } else {
-            pack.type = NACK;
-        }
-        vers_reseau(&pack);
+        } else p_ack.type = NACK;
+        vers_reseau(&p_ack);
     }
 
     printf("[TRP] Fin execution protocole transport.\n");

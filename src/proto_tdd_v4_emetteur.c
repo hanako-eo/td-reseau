@@ -15,97 +15,96 @@
 #include "couche_transport.h"
 #include "services_reseau.h"
 
-bool completement_envoye(etat_paquet_t* send_paquets_state) {
-    for (int i = 0; i < SEQ_NUM_SIZE; i++) {
-        if (send_paquets_state[i] != ETAT_CONFIRME)
-            return false;
-    }
-    return true;
-}
-
 /* =============================== */
 /* Programme principal - émetteur  */
 /* =============================== */
 int main(int argc, char* argv[])
 {
-    unsigned char message[MAX_INFO]; /* message de l'application */
-    int taille_msg; /* taille du message */
+    unsigned char message[MAX_INFO]; // message de l'application
+    int taille_msg; // taille du message
 
-    etat_paquet_t send_paquets_state[SEQ_NUM_SIZE] = {ETAT_NONENVOYE};
-    paquet_t paquets[SEQ_NUM_SIZE] = {0}; /* paquet utilisé par le protocole */
-    paquet_t pack = {0};
+    etat_paquet_t etats_des_paquets[SEQ_NUM_SIZE] = {ETAT_NONENVOYE};
+    paquet_t paquets[SEQ_NUM_SIZE]; // paquets d'envoie des messages
+    paquet_t p_ack; // paquet de recuperation du ACK
 
     // fenetre du "Selective Repeat"
-    uint32_t write_cursor = 0;
-    uint32_t send_cursor = 0;
+    uint32_t curseur_decriture = 0;
+    uint32_t curseur_denvoie = 0;
     uint32_t borne_inf = 0;
-    uint32_t window_len = SEQ_NUM_SIZE / 2;
-    if (argc > 1)
-        window_len = atoi(argv[1]);
+    uint32_t taille_fenetre =  argc > 1 ? atoi(argv[1]) : SEQ_NUM_SIZE / 2;
+    int8_t nombre_paquets_non_envoye = 0;
 
     init_reseau(EMISSION);
 
+    printf("[TRP] Taille de la fenetre d'envoie : %d.\n", taille_fenetre);
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 
     de_application(message, &taille_msg);
-    /* tant que l'émetteur a des données à envoyer */
-    while ( taille_msg != 0 || !completement_envoye(send_paquets_state) ) {
-        /* construction des paquets */
-        while (dans_fenetre(borne_inf, write_cursor, window_len) && taille_msg != 0) {
-            paquet_t* paquet = &paquets[write_cursor];
+
+    // systeme d'envoie des paquets via double curseur
+    while (taille_msg != 0 || nombre_paquets_non_envoye != 0) {
+        // construction des paquets
+        while (dans_fenetre(borne_inf, curseur_decriture, taille_fenetre) && taille_msg != 0) {
+            paquet_t* paquet = &paquets[curseur_decriture];
 
             for (int i = 0; i < taille_msg; i++) {
                 paquet->info[i] = message[i];
             }
-            paquet->num_seq = write_cursor;
+            paquet->num_seq = curseur_decriture;
             paquet->lg_info = taille_msg;
             paquet->type = DATA;
-            paquet->somme_ctrl = calcul_checksum(paquet);
-            send_paquets_state[write_cursor] = ETAT_NONENVOYE;
+            paquet->somme_ctrl = calcul_somme_ctrl(paquet);
+            etats_des_paquets[curseur_decriture] = ETAT_NONENVOYE;
 
-            write_cursor = increment(write_cursor);
-            /* lecture des donnees suivantes de la couche application */
+            curseur_decriture = increment(curseur_decriture);
+            nombre_paquets_non_envoye++;
+
+            // lecture des donnees suivantes de la couche application
             de_application(message, &taille_msg);
         }
 
-        // // Envoie des paquets
-        while (dans_fenetre(borne_inf, send_cursor, window_len) && send_cursor != write_cursor) {
-            if (send_paquets_state[send_cursor] == ETAT_NONENVOYE) {
-                depart_temporisateur_num(send_cursor + 1, 2000);
+        // envoie des paquets
+        while (
+            dans_fenetre(borne_inf, curseur_denvoie, taille_fenetre) &&
+            curseur_denvoie != curseur_decriture
+        ) {
+            if (etats_des_paquets[curseur_denvoie] == ETAT_NONENVOYE) {
+                depart_temporisateur_num(curseur_denvoie + 1, 2000);
 
-                send_paquets_state[send_cursor] = ETAT_ENVOYE;
-                vers_reseau(&paquets[send_cursor]);
+                etats_des_paquets[curseur_denvoie] = ETAT_ENVOYE;
+                vers_reseau(&paquets[curseur_denvoie]);
             }
-            send_cursor = increment(send_cursor);
+            curseur_denvoie = increment(curseur_denvoie);
         }
 
+        // attente d'un paquet ou d'un timeout
         int event = attendre();
-        if (event != -1) {
-            send_paquets_state[event - 1] = ETAT_NONENVOYE;
-        } else {
-            de_reseau(&pack);
+        if (event == -1) {
+            de_reseau(&p_ack);
 
-            if (send_paquets_state[pack.num_seq] == ETAT_ENVOYE) {
-                arret_temporisateur_num(pack.num_seq + 1);
+            // pour evite 
+            if (etats_des_paquets[p_ack.num_seq] != ETAT_ENVOYE)
+                goto decalage;
 
-                if (pack.type == NACK) {
-                    send_paquets_state[pack.num_seq] = ETAT_NONENVOYE;
-                } else {
-                    send_paquets_state[pack.num_seq] = ETAT_CONFIRME;
-                }
-            }
-        }
+            arret_temporisateur_num(p_ack.num_seq + 1);
 
+            if (p_ack.type == ACK) {
+                etats_des_paquets[p_ack.num_seq] = ETAT_CONFIRME;
+                nombre_paquets_non_envoye--;
+            } else etats_des_paquets[p_ack.num_seq] = ETAT_NONENVOYE;
+        } else etats_des_paquets[event - 1] = ETAT_NONENVOYE;
+
+    decalage:
         // decalage de la fenetre
         int i = borne_inf;
-        while (dans_fenetre(borne_inf, i, window_len)) {
-            if (send_paquets_state[i] != ETAT_CONFIRME)
+        while (dans_fenetre(borne_inf, i, taille_fenetre)) {
+            if (etats_des_paquets[i] != ETAT_CONFIRME)
                 break;
 
             i = increment(i);
         }
-        borne_inf = send_cursor = i;
+        borne_inf = curseur_denvoie = i;
     }
 
     printf("[TRP] Fin execution protocole transfert de donnees (TDD).\n");

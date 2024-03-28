@@ -17,47 +17,49 @@
 /* =============================== */
 int main(int argc, char* argv[])
 {
-    unsigned char message[MAX_INFO]; /* message de l'application */
-    int taille_msg; /* taille du message */
-    paquet_t paquet = {0}, pack = {0}; /* paquet utilisé par le protocole */
-    int8_t seq = 0;
+    unsigned char message[MAX_INFO]; // message de l'application
+    int taille_msg; // taille du message
+    paquet_t paquet; // paquet d'envoie du message
+    paquet_t p_ack; // paquet de recuperation du ACK
+    uint8_t seq = 0;
 
     init_reseau(EMISSION);
 
     printf("[TRP] Initialisation reseau : OK.\n");
     printf("[TRP] Debut execution protocole transport.\n");
 
-    /* lecture de donnees provenant de la couche application */
+    // lecture de donnees provenant de la couche application
     de_application(message, &taille_msg);
 
-    /* tant que l'émetteur a des données à envoyer */
-    while ( taille_msg != 0 ) {
-        /* construction paquet */
-        for (int i=0; i<taille_msg; i++) {
+    // tant que l'émetteur a des données à envoyer
+    while (taille_msg != 0) {
+        // construction du paquet
+        for (int i = 0; i < taille_msg; i++) {
             paquet.info[i] = message[i];
         }
-        paquet.num_seq = seq = (seq + 1) % 255;
+        // boucle tout seul avec l'overflowing du nombre
+        paquet.num_seq = seq++;
         paquet.lg_info = taille_msg;
         paquet.type = DATA;
-        paquet.somme_ctrl = calcul_checksum(&paquet);
+        paquet.somme_ctrl = calcul_somme_ctrl(&paquet);
 
         bool resend = false;
         do {
-            /* remise à la couche reseau */
+            // remise à la couche reseau
             vers_reseau(&paquet);
             depart_temporisateur(2000);
 
             int event = attendre();
 
             if (event == -1) {
-                /* reception de l'ack */
                 arret_temporisateur();
-                de_reseau(&pack);
-                resend = pack.type == NACK || paquet.num_seq != pack.num_seq;
+                // reception de l'ack
+                de_reseau(&p_ack);
+                resend = p_ack.type == NACK || paquet.num_seq != p_ack.num_seq;
             } else resend = true;
         } while (resend);
 
-        /* lecture des donnees suivantes de la couche application */
+        // lecture des donnees suivantes de la couche application
         de_application(message, &taille_msg);
     }
 
